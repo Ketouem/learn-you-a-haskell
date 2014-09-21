@@ -195,3 +195,135 @@ filter'' p = foldr (\x acc -> if p x then x : acc else acc) []
 
 last' :: [a] -> a
 last' = foldl1 (\_ x -> x)
+
+-- Folding inifinite lists
+
+-- Reimplentation of and, takes a list of Booleans and sends back True if all
+-- elements are True, False otherwise
+
+and' :: [Bool] -> Bool
+and' xs = foldr (&&) True xs
+
+-- and' [True, False, True] <=> True && (False && (True && True))
+-- the last True represents the starting accumulator
+
+-- foldr will work on infinite lists when the binary function that we're passing
+-- doesn't always need to evaluate its second parameter to give us some sort of
+-- answer (like &&)
+
+-- Scans
+-- scanl and scanr functions are like foldl and foldr except they report all the
+-- intermediate accumulator states in the form of a list. scanr1 & scanl1 are
+-- analogous to foldl1 and foldr1
+
+-- Ex:
+-- scanl (+) 0 [3,5,2,1]
+-- >>> [0,3,8,10,11]
+-- scanr (+) 0 [3,5,2,1]
+-- >>> [11,10,8,3,0]
+
+-- Scans are used to monitor the progress of a function that can be implemented
+-- as a fold
+
+-- Ex: find how many elements does it take for the sum of the square roots of
+--     all natural numbers to exceed 1000
+
+sqrtSums :: Int
+sqrtSums = length (takeWhile (<1000) (scanl1 (+) (map sqrt [1..]))) + 1
+
+-- takeWhile is used instead of filter because filter wouldn't cut off the
+-- resulting list once a number that is equal or greater than 1000 is found.
+
+-- Function application with $
+
+-- ($) :: (a -> b) -> a -> b
+-- f $ x = f x
+
+-- Normal function application (putting a space between two things) has a really
+-- high precedence, the $ application has the lowest.
+
+-- Normal function application is left associative: f a b c <=> ((f a) b) c
+-- $ function application is right associative: f $ g $ x <=> f $ (g $ x)
+
+-- Most of the time it is a convenience function that lets us write fewer
+-- parentheses
+-- When a $ is encountered, the expression on its right is applied as the
+-- parameter to the function on its left.
+
+-- sqrt 3 + 4 + 9 : adds 4 and 9 then adds it to the square root of 3
+-- sqrt (3 + 4 + 9) : square root of the whole sum
+-- can also be written as sqrt $ 3 + 4 + 9
+
+-- Ex: sum (filter (>10) (map (*2) [2..10]))
+--     equivalent to
+--     sum $ filter (>10) (map (*2) [2..10])
+--     equivalent to
+--     sum $ filter (>10) $ map (*2) [2..10]
+
+-- Apart from getting rid of parentheses, $ lets us treat function application
+-- like just another function.
+-- Ex: map a function application over a list of functions
+--     map ($ 3) [(4+), (10*)]
+--     >>> [7.0, 30.0]
+
+-- Function composition
+-- (f°g)(x) = f(g(x))
+
+-- In Haskell, we do function composition with the . function, which is defined
+-- like this
+-- (.) :: (b -> c) -> (a -> b) -> a -> c
+-- f . g = \x -> f (g x)
+
+-- One use for function composition is making functions on the fly to pass to
+-- other functions (we could use lambdas but is often more clearer and concise
+-- to use composition).
+
+-- Ex: function that takes a list of number and turn them into negative number
+negateAll :: (Num a) => [a] -> [a]
+negateAll xs = map (\x -> negate (abs x)) xs
+
+negateAll' :: (Num a) => [a] -> [a]
+negateAll' xs = map (negate . abs) xs
+
+-- Note: function composition is right associative
+
+-- Function composition with multiple parameters
+
+-- If we want to use composition with function that takes several parameters
+-- we usually must partially apply them so that each function takes only one
+-- parameter
+
+-- sum (replicate 5 (max 6.7 8.9))
+-- <=>
+-- (sum .replicate 5) max 6.7 8.9
+-- <=>
+-- sum . replicate 5 $ max 6.7 8.9
+
+-- Point-free style
+-- Another common use of function composition is defining function in the
+-- point-free style.
+
+-- sum' :: (Num a) => [a] -> a
+-- sum' xs = foldl (+) 0 xs
+
+-- The xs is on the far right on the both sides of the equal sign. Because of
+-- currying we can omit the xs on both sides, since calling foldl (+) 0 creates
+-- a function that takes a list. Doing so, we are writing the function in
+-- point-free style
+
+-- sum' :: (Num a) => [a] -> a
+-- sum' = foldl (+) 0
+
+-- fn x = ceiling (negate (tan (cos (max 50 x))))
+-- Here we can't just get rid of the x on both sides since the x in the function
+-- body is surrounded by (). cos (max 50) does not make sense, we can't get the
+-- cos of a function.
+-- fn = ceiling . negate . tan . cos . max 50
+
+-- Better readability, but when the function is too complex it is discouraged
+-- doing so. For big functions, the preferred style is to use `let`bindings
+-- to give labels to intermediary results or to split the pb into sub pbs.
+
+-- Another version of oddSquareSum
+oddSquareSum' :: Integer
+oddSquareSum' = sum . takeWhile (<1000) . filter odd $ map (^2) [1..] 
