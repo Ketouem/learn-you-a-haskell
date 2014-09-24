@@ -16,6 +16,7 @@
 
 -- Ex.: `Data.List` module for manipulating...lists
 import Data.List
+import Data.Char
 
 numUniques :: (Eq a) => [a] -> Int
 numUniques = length . nub
@@ -47,7 +48,7 @@ numUniques = length . nub
 -- Data.List.words -> converts string into list of words (string)
 -- Data.List.group -> takes a list and groups adjacent element into sublist
 --                    if they are equal
--- Data.List.sort -> we need to sort the list after the split and before the 
+-- Data.List.sort -> we need to sort the list after the split and before the
 --                   grouping
 
 wordNums :: String -> [(String, Int)]
@@ -57,3 +58,24 @@ wordNums = map (\ws -> (head ws, length ws)) . group . sort . words
 -- wordNums xs = map (\ws -> (head ws, length ws)) (group (sort (words xs)))
 
 -- * Needle in the Haystack
+-- Make a function that checks if a list is wholly contained in a second list
+-- Data.list.tails -> apply recursively tail on the item of a list
+-- Data.list.isPrefixOf -> takes two lists, and tells us if the second one
+--                         starts with the first one
+-- Data.list.any -> takes a predicate and list and tells us if any element
+--                  satisfy the predicate
+isIn :: (Eq a) => [a] -> [a] -> Bool
+needle `isIn` haystack = any (needle `isPrefixOf`) (tails haystack)
+-- isIn <=> Data.list.isInfixOf
+
+-- * Caesar cipher
+-- We'll apply it on the whole range of the unicode chars
+-- Data.Char.ord -> char to code point
+-- Data.Char.chr -> code point to char
+encode :: Int -> String -> String
+encode offset msg = map (\c -> chr $ ord c + offset) msg
+-- a composed version (chr . (+ offset) . ord)
+decode :: Int -> String -> String
+decode shift msg = encode (negate shift) msg
+
+-- On strict left folds
