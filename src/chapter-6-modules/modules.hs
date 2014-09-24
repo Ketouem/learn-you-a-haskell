@@ -1,0 +1,4 @@
+-- Modules
+-- A module is essentially a file that defines some functions, types and type
+-- classes.
+-- A Haskell program is a collection of modules.
