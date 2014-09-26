@@ -79,3 +79,12 @@ decode :: Int -> String -> String
 decode shift msg = encode (negate shift) msg
 
 -- On strict left folds
+
+-- foldl can sometimes lead to stack overflow errors.
+-- When we use foldl, Haskell doesn't evaluate the actual accumulator on every
+-- step. Instead, the evaluation is deferred. It also keeps the old deferred
+-- computation in memory.
+
+-- Data.list.foldl' provides a stricter version of foldl where the accumulator
+-- is evalutaed at each step.
+-- A stricter version of foldl1 exists -> foldl1'
