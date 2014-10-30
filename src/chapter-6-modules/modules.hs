@@ -17,6 +17,7 @@
 -- Ex.: `Data.List` module for manipulating...lists
 import Data.List
 import Data.Char
+import qualified Data.Map as Map
 
 numUniques :: (Eq a) => [a] -> Int
 numUniques = length . nub
@@ -128,8 +129,9 @@ firstTo n = find (\x -> digitSum x == n) [1..]
 -- The first value being the key and the second the value.
 
 phoneBook =
-    [("betty", "555-2938")
-    ,("bonnie", "452-2928")]
+    [("betty", "555-2938"),
+     ("betty", "555-2939"),
+     ("bonnie", "452-2928")]
 
 -- Lookup for a value given a key
 findKey :: (Eq k) => k -> [(k, v)] -> v
@@ -149,3 +151,53 @@ findKey'' :: (Eq k) => k -> [(k, v)] -> Maybe v
 findKey'' key xs = foldr (\(k,v) acc -> if key == k then Just v else acc) Nothing xs
 
 -- Enter Data.Map
+
+-- The Data.Map module offers association lists / maps that are much faster.
+-- Because Data.Map exports functions that clash with the Prelude and Data.List
+-- ones, we'll do a qualified import (forcing an obligatory namespace qualifier)
+
+-- import qualified Data.Map as Map
+
+-- Turn an association list into a map by using Data.Map.fromList which takes an
+-- association list (in the form of a list) and returns a map with the same
+-- association.
+
+-- Map.fromList :: (Ord k) => [(k, v)] -> Map.Map k v
+
+-- Finding a value inside a Map
+-- Map.lookup :: (Ord k) => k -> Map.Map k a -> Maybe a
+
+-- Inserting a new key-value pair
+-- Map.insert :: (Ord k) => k -> a -> Map.Map k a -> Map.Map k a
+
+-- Length of the Map
+-- Map.size :: Map.Map k a -> Int
+
+phoneBookMap = Map.fromList phoneBook
+
+-- The numbers in the phone book example as represented as strings. We'll turn
+-- that into a list of ints using Data.Char.digitToInt
+
+string2digits :: String -> [Int]
+string2digits = map digitToInt . filter isDigit
+
+-- Now mapping this fucntion over our map
+intBook :: Map.Map String String -> Map.Map String [Int]
+intBook = Map.map string2digits
+
+-- The map from Data.Map takes a function and a map, and applies that function
+-- to each value in the map
+
+-- Extending the phoneBook, a person can have several numbers.
+-- Data.Map.fromListWith, acts like fromList but instead of discarding duplicate
+-- keys, it uses a function suppliesd to it to decide what to do with them.
+
+phoneBookToMap :: (Ord k) => [(k, String)] -> Map.Map k String
+phoneBookToMap xs = Map.fromListWith add xs
+    where add number1 number2 = number1 ++ ", " ++ number2
+
+-- We could also first make all the values in the association list singleton
+-- lists and then use ++ to combine the numbers
+
+phoneBookToMap' :: (Ord k) => [(k, a)] -> Map.Map k [a]
+phoneBookToMap' xs = Map.fromListWith (++) $ map (\(k, v) -> (k, [v])) xs
