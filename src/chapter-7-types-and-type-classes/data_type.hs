@@ -1,3 +1,20 @@
+-- Exporting our shapes in a module
+
+-- By using Shape''(..) we export all the value constructors for Shape.
+-- This means that people who import our module can make shapes by using
+-- the Rectangle and Circle value constructors.
+-- Same as writing Shape(Rectangle, Circle).
+
+module Shapes
+( Point(..)
+, Shape''(..)
+, area'
+, nudge
+, baseCircle
+, baseRect
+) where
+
+
 -- Defining a new data type
 
 -- One way to make our own type is to use the data keyword
