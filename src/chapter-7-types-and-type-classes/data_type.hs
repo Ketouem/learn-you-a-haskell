@@ -46,3 +46,31 @@ data Shape' = Circle' Float Float Float | Rectangle' Float Float Float Float
 -- map (Circle 10 20) [4,5,6,6]
 
 -- Improving Shape with the Point Data Type
+
+-- Defining a 2D point
+
+data Point = Point Float Float deriving (Show)
+data Shape'' = Circle'' Point Float | Rectangle'' Point Point deriving (Show)
+
+-- Note: when defining a point, we used the same name for the data type and
+-- the value constructor, has no special meaning.
+
+area' :: Shape'' -> Float
+area' (Circle'' _ r) = pi * r ^ 2
+area' (Rectangle'' (Point x1 y1) (Point x2 y2)) = (abs $ x2 - x1) * (abs $ y2 - y1)
+
+-- Moving a shape, the nudge function
+
+nudge :: Shape'' -> Float -> Float -> Shape''
+nudge (Circle'' (Point x y) r) a b = Circle'' (Point (x + a) (y + b)) r
+nudge (Rectangle'' (Point x1 y1) (Point x2 y2)) a b 
+    = Rectangle'' (Point (x1 + a) (y1 + b)) (Point (x2 + a) (y2 + b))
+
+-- We can make some auxiliary functions that can create shapes of some
+-- size at the zero origin and then nudge them.
+
+baseCircle :: Float -> Shape''
+baseCircle r = Circle'' (Point 0 0) r
+
+baseRect :: Float -> Float -> Shape''
+baseRect width height = Rectangle'' (Point 0 0) (Point width height)
