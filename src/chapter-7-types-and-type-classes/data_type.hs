@@ -141,3 +141,28 @@ data Car' = Car' { company :: String
 -- ghci> Car' {company="Ford", model="Mustang", year=1967}
 -- Car' {company="Ford", model="Mustang", year=1967}
 -- This syntax is useful for non trivial objects.
+
+-- Type Parameters
+
+-- Type constructors can take types as parameters and produce new types
+
+-- Example of an already implemented type
+data Maybe a = Nothing | Just a
+-- `a` is the type parameter. `Maybe` is called a type constructor.
+-- Depending on what we want this data type to hold when it's not `Nothing`
+-- this type constructor can end up producing a type of `Maybe Int`,
+-- `Maybe String`, etc.
+
+-- Works with Haskell's type inference, but if we want to explicitly pass a type
+-- as a type parameter using ::
+-- ghci> Just 3 :: Maybe Int
+
+-- Type parameters are useful because they allow to make data types that
+-- can hold different things
+data IntMaybe = INothing | IJust Int
+data StringMaybe = SNothing | SJust String
+data ShapeMaybe = ShNothing | SHJust Shape
+-- We could even use type parameters to make a generic Maybe that can contain values
+-- of any type at all
+
+-- Vector von Doom
