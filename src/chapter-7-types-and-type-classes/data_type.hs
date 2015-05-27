@@ -166,3 +166,73 @@ data ShapeMaybe = ShNothing | SHJust Shape
 -- of any type at all
 
 -- Vector von Doom
+
+-- Implementing a 3D vector that holds numeric types, but must be of same data type
+-- part before the = sign -----> type constructor
+-- part after the = sign ------> value constructors (possibly separated by |)
+data Vector a = Vector a a a deriving (Show)
+
+vplus :: (Num a) => Vector a -> Vector a -> Vector a
+(Vector i j k) `vplus` (Vector l m n) = Vector (i+l) (j+m) (k+n)
+
+dotProd :: (Num a) => Vector a -> Vector a -> a
+(Vector i j k) `dotProd` (Vector l m n) = i*l + j*m + k*n
+
+vmult :: (Num a) => Vector a -> a -> Vector a
+(Vector i j k) `vmult` m = Vector (i*m) (j*m) (k*m)
+
+-- Derived Instances
+
+-- =/= OOP, we first make the data type then think about how it can act
+
+-- Equating People
+
+data Person'' = Person'' { firstName'' :: String
+                         , lastName'' ::String
+                         , age'' :: Int
+                         } deriving (Eq)
+-- When we derive the Eq instance for a type and then try to compare two values of
+-- that type with == or /=. Warning: the types of all the field also must be part of the
+-- Eq type class
+
+mikeD = Person'' {firstName'' = "Michael", lastName'' = "Diamond", age'' = 43}
+adRock = Person'' {firstName'' = "Adam", lastName'' = "Horowitz", age'' = 41}
+mca = Person'' {firstName'' = "Adam", lastName'' = "Yauch", age'' = 44}
+
+-- Since Person'' is now in the Eq type class it can be used for all the functions that
+-- have a class constraint of Eq.
+-- ghci> let beastieBoys = [mca, adRock, mikeD]
+-- ghci> mikeD `elem` beastieBoys
+-- True
+
+-- Show me how to Read
+
+-- Show and Read type classes are for things that can be converted to or from strings,
+-- respectively.
+
+data Person''' = Person''' { firstName''' :: String
+                           , lastName''' ::String
+                           , age''' :: Int
+                           } deriving (Eq, Show, Read)
+
+-- ghci> "mikeD is: " ++ show mikeD
+-- "mikeD is: Person''' {firstName''' = \"Michael\", lastName''' = \"Diamond\", age''' = 43}"
+-- ghci> read "Person''' {  firstname''' = \"Michael"" ++
+--                       ", lastname''' = \"Diamond\"" ++
+--                       ", age''' = 43}" :: Person'''
+
+-- Order in the court
+
+-- We can derive instances for the Ord type class, which is for types that have values that can
+-- be ordered
+
+-- data Bool = False | True deriving (Ord)
+
+-- ghci> True `compare` False
+-- GT
+-- ghci> True > False
+-- True
+-- ghci > True < False
+-- False
+
+--Any day of the week
