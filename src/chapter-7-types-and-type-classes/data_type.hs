@@ -14,6 +14,7 @@ module Shapes
 , baseRect
 ) where
 
+import qualified Data.Map as Map
 
 -- Defining a new data type
 
@@ -236,3 +237,161 @@ data Person''' = Person''' { firstName''' :: String
 -- False
 
 --Any day of the week
+
+-- Defining an enum, all the type's value constructor are nullary (don't have any fields)
+-- Enum type class is for things that have predecessors and successors.
+-- Bounded can also be used, which is for things that have a lowest and highest possible value.
+data Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
+  deriving (Eq, Ord, Show, Read, Bounded, Enum)
+
+-- Thanks to Bounded
+minBoundDay = minBound :: Day
+maxBoundDay = maxBound :: Day
+
+-- Thanks to Enum
+succMonday = succ Monday
+predSaturday = pred Saturday
+sliceDays = [Thursday .. Sunday]
+sliceAllDays = [minBound .. maxBound] :: [Day]
+
+-- Type synonyms
+
+-- [Char] ans String types are equivalent. They are implemented with type synonyms.
+-- type String = [Char]
+
+-- Making our phonebook prettier
+
+-- Old version
+phoneBook :: [(String, String)]
+phoneBook = [("betty", "555-2938")]
+
+-- Let's use type synonyms to make the whole thing more expressive
+type PhoneNumber = String
+type Name = String
+type PhoneBook = [(Name, PhoneNumber)]
+
+-- Useful to use synonyms on String when we want to convey some meaning
+inPhoneBook :: Name -> PhoneNumber -> PhoneBook -> Prelude.Bool
+inPhoneBook name pnumber pbook = (name, pnumber) `elem` pbook
+
+-- Same without type synonyms
+-- inPhoneBook :: String -> String > [(String, String)] -> Bool
+
+-- Parameterizing type synonyms
+type AssocList k v = [(k, v)]
+
+-- Just as we can partially apply functions to get new functions, we can partially apply
+-- type parameters and get new type constructors from them.
+-- e.g. if we wanted a type that represents a map from integers to something, we could do this
+-- type IntMap v = Map.Map Int v
+-- or type IntMap = Map Int
+
+-- Type synonyms (and types generally) can be used onyl in the type portion of Haskell.
+-- Type portion includes data and type declaration, as well as after a :: in type declarations or
+-- type annotations.
+
+-- Go Left, Then Right
+
+-- Another data type that takes two types as its parameters is `Either a b` type
+-- data Either a b = Left a | Right b deriving (Eq, Ord, Read, Show)
+-- 2 value constructors. If `Left` is used, then its content are of type a, resp `Right` and b.
+
+-- We can use this type to encapsulate a value of one type or another. Then when we get a value of
+-- type `Either a b`, we usually pattern match on both Left and Right.
+
+-- So far we used `Maybe a` to represent the results of computations that could have failed.
+-- But sometimes it is not enough because `Nothing` doesn't convey much info other than that sth
+-- has failed.
+-- When we're interested in how or why a function failed, we usually use the result type of
+-- `Either a b` where `a` is the failure type and `b` the type of a successful computation.
+
+-- Ex: each locker has a code combination. When students need to be assigned a locker, they tell
+-- the locker supervisor which locker number they want, and he gives thde code. However of the locker
+-- is already being used, the student needs to pick a different one.
+
+data LockerState = Taken | Free deriving (Show, Eq)
+type Code = String
+type LockerMap = Map.Map Int (LockerState, Code)
+
+-- We'll make a function that searches for the code in a locker map. We'll use an `Either String Code`
+-- type to represent the result, because the lookup can fail in two ways:
+--   1) the locker can be taken
+--   2) the locker number might not exist
+
+lockerLookup :: Int -> LockerMap -> Either String Code
+lockerLookup lockerNumber map = case Map.lookup lockerNumber map of
+  Prelude.Nothing -> Left $ "Locker" ++ show lockerNumber ++ " doesn't exist!"
+  Prelude.Just (state, code) -> if state /= Taken
+                          then Right code
+                          else Left $ "Locker " ++ show lockerNumber
+                                      ++ " is already taken!"
+
+lockers :: LockerMap
+lockers = Map.fromList
+  [(100, (Taken, "ZD39I"))
+  ,(101, (Free, "JAH3I"))
+  ]
+
+-- Recursive Data Structures
+
+-- e.g. the List
+-- data List a = Empty | Cons a (List a) deriving (Show, Read, Eq, Ord)
+-- Note Cons <--> :
+
+-- Improving our list
+
+-- We can define function to be automatically infix by naming them using only special characters.
+-- We can also do the same with constructors, since they're just functions that return a data type.
+-- There is one restriction however: infix constructors must begin with a colon.
+
+infixr 5 :-:
+data List a = Empty | a :-: (List a) deriving (Show, Read, Eq, Ord)
+
+-- New syntactic declaration `fixity`. A fixity states how tightly the operator binds and whether
+-- it's left/right-associative. Fixity value is optional.
+
+-- Let's re-implement adding list together (++)
+infixr 5 ^++
+(^++) :: List a -> List a -> List a
+Empty ^++ ys = ys
+(x :-: xs) ^++ ys = x :-: (xs ^++ ys)
+-- We pattern matched on (x :-: xs). That works because pattern matching is actually about matching constructors.
+
+-- Let's Plant a Tree
+
+-- Binary search tree, left elt is smaller, right is bigger
+-- A tree is either an empty tree or it's an element that contains some value and two trees. Perfect fit for ADT.
+data Tree a = EmptyTree | Node a (Tree a) (Tree a) deriving (Show)
+
+-- Building the tree
+singleton :: a -> Tree a
+singleton x = Node x EmptyTree EmptyTree
+-- singleton is a shortcut for creating a node that has something set as its root and 2 empty subtrees.
+
+treeInsert :: (Ord a) => a -> Tree a -> Tree a
+treeInsert x EmptyTree = singleton x
+treeInsert x (Node a left right)
+  | x == a = Node x left right
+  | x < a  = Node a (treeInsert x left) right
+  | x > a  = Node a left (treeInsert x right)
+
+-- A function that checks if some element is in the tree.
+treeElem :: (Ord a) => a -> Tree a -> Prelude.Bool
+treeElem x EmptyTree = Prelude.False
+treeElem x (Node a left right)
+  | x == a = Prelude.True
+  | x < a  = treeElem x left
+  | x > a  = treeElem x right
+
+-- We'll use a fold to build a tree from a list. Note: pretty much everything that traverses a list one item at a time
+-- and returns a value can be implemented with a fold.
+
+nums = [8, 6, 1, 4, 7, 3, 5]
+numsTree = foldr treeInsert EmptyTree nums
+
+-- Type classes 102
+
+-- Recap: Type classes are sort of like interfaces. A type class defines some behavior (such as comparing for equality).
+--        Types that can behave in that way are made instances of that type classes. The behavior of type classes is
+--        achieved by defining functions or just type declarations that we then implement. So when we say that a type is an
+--        instance of a type class, we mean that we can use the functions that the type class defines with that type.
