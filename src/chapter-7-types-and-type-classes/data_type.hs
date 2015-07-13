@@ -395,3 +395,51 @@ numsTree = foldr treeInsert EmptyTree nums
 --        Types that can behave in that way are made instances of that type classes. The behavior of type classes is
 --        achieved by defining functions or just type declarations that we then implement. So when we say that a type is an
 --        instance of a type class, we mean that we can use the functions that the type class defines with that type.
+
+-- Inside the Eq Type Class
+
+-- Eq is for value that can be equated. It defines the function == and /=.
+-- How the Eq class is defined in the std lib.
+-- class Eq a where
+--  (==) :: a -> a -> Bool
+--  (/=) :: a -> a -> Bool
+--  x == y = not (x /= y)
+--  x /= y = not (x == y)
+
+-- `class Eq a where` means a new type class called Eq is being defined. The a is the type variable, so `a` will play the role
+-- of the type that will soon be made an instance of Eq.
+-- Several functions are defined. It's not mandatory to implement the function bodies themselves; just their type declarations are
+-- required. Here, the function bodies are defined in terms of mutual recursion.
+
+-- A traffic light data type
+
+data TrafficLight = Red | Yellow | Green
+-- Creating an instance by hand
+instance Eq TrafficLight where
+  Red == Red = Prelude.True
+  Green == Green = Prelude.True
+  Yellow == Yellow = Prelude.True
+  _ == _ = Prelude.False
+
+-- `class` is for defining new type classes, and instances is for making our type instances of type classes.
+-- Because == was defined in terms of /= and vice versa in the class declaration, we needed to overwrite only one of them in the
+-- instance declaration. That is called Minimal Complete Definition (MCD) for the type class.
+
+-- Let's make this an instance of Show by hand. To satisfy the MCD for Show, we just need to implement its `show` function.
+
+instance Show TrafficLight where
+  show Red = "Red Light"
+  show Yellow = "Yellow Light"
+  show Green = "Green Light"
+
+-- Subclassing
+-- We can also make type classes that are subclasses of other type classes.
+-- It's just a matter of class constraint on a class declaration.
+
+-- Parameterized types as instances of type classes
+-- Most of the time, class contraints in class declarations are used for making a type class a subclass of another type class,
+-- and class contraints in instance declarations are used to express requirements about the contents of some type.
+
+-- Tip: in order to see what the instances of a type class are, just type `:info YourTypeClass` in GHCi.
+
+-- A Yes-No Type Class
