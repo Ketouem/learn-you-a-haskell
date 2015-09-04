@@ -443,3 +443,118 @@ instance Show TrafficLight where
 -- Tip: in order to see what the instances of a type class are, just type `:info YourTypeClass` in GHCi.
 
 -- A Yes-No Type Class
+
+class YesNo a where
+  yesno :: a -> Prelude.Bool
+
+-- The YesNo type class defines one function. That function takes one value of a concrete type that can be considered to hold some
+-- concept of 'trueness'
+
+instance YesNo Int where
+  yesno 0 = Prelude.False
+  yesno _ = Prelude.True
+
+instance YesNo [a] where
+  yesno [] = Prelude.False
+  yesno _ = Prelude.True
+
+instance YesNo Prelude.Bool where
+  yesno = id
+
+-- id in a std lib function that takes a parameter and returns the same thing.
+
+instance YesNo (Prelude.Maybe a) where
+  yesno (Prelude.Just _) = Prelude.True
+  yesno Prelude.Nothing = Prelude.False
+
+-- No need for a class constraint as we made no assumptions about the contents of the Maybe. Still need to write (Maybe a) as we're
+-- working with a croncrete type
+
+instance YesNo (Tree a) where
+  yesno EmptyTree = Prelude.False
+  yesno _ = Prelude.True
+
+instance YesNo TrafficLight where
+  yesno Red = Prelude.False
+  yesno _ = Prelude.True
+
+-- > yesno "haha"
+-- > yesno $ Just 0
+-- > yesno 
+
+-- mimicking the behaviour of an if statement
+
+yesnoIf :: (YesNo y) => y -> a -> a -> a
+yesnoIf yesnoVal yesResult noResult =
+  if yesno yesnoVal
+      then yesResult
+      else noResult
+
+-- > yesnoIf [] "YEAH!" "NO!"
+-- "NO!"
+
+-- Functor Type Class
+
+-- Reminder about type classes of the std library:
+-- Ord: stuff that can be ordered
+-- Eq: stuff that can be equated
+-- Show: can be displayed as string
+-- Read: can be parsed from string
+
+-- Functor: things that can be mapped over
+
+-- class Functor f where
+--  fmap :: (a -> b) -> f a -> f b
+
+-- Defines one function fmap, without a default implementation
+-- f is not a concrete type but a type constructor that takes one type parameter.
+-- fmap takes a function from one type to another and a functor value applied with one type
+-- returns a functor value applied with another type
+
+-- map :: (a -> b) -> [a] -> [b]
+-- map is a fmap that works only on lists.
+
+-- list is an instance of the Functor type class
+-- instance Functor [] where
+--  fmap = map
+-- did not write `instance Functor [a] where` because f must be a type constructor that takes one type
+-- [a] is already concrete
+
+-- Maybe as a Functor
+
+-- Types that can act like a box can be functors. `Maybe a` type is like a box that can hold nothing (`Nothing`)
+-- or it can contain one item (`Just "HAHA"`)
+
+-- instance Functor Maybe where
+--  fmap f (Just x) = Just (f x)
+--  fmap f Nothing = Nothing
+
+-- Trees are Functors
+
+instance Functor Tree where
+  fmap f EmptyTree= EmptyTree
+  fmap f (Node x left right) = Node (f x) (fmap f left) (fmap f right)
+
+-- (Either a) as a Functor
+
+-- Functor type class wants a type constructor that takes only one type parameter, but Either takes two.
+-- Partially applied Either has one free parameter
+-- instance Functor (Either a) where
+--  fmap f (Right x) = Right (f x)
+--  fmap f (Left x) = Left x
+
+-- Kinds and Some Type-Foo
+
+-- Reminder: Type constructors take other types as parameters to eventually produce concrete types. Behavior similar to that
+--           of functions, which take values as parameters to produce values. Type constructors can be partially applied.
+
+-- A kind is ~ the type of a type
+-- > :k Int
+-- Int :: *
+
+-- * indicates that the type is a concrete one. A concrete type is a type that does not take any type parameters.
+
+-- > :k Maybe
+-- Maybe :: * -> *
+
+-- This kind tells us that the Maybe type constructor takes one concrete type and returns a concrete one.
